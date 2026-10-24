@@ -2005,11 +2005,25 @@ function utmParams() {
 
 function goCheckout(url) {
   if (!linkOk(url)) { showToast('Link de pagamento ainda não configurado.'); return; }
-  var q = utmParams();
-  if (q) url += (url.indexOf('?') > -1 ? '&' : '?') + q;
+  try {
+    var u = new URL(url, location.href);
+    new URLSearchParams(utmParams()).forEach(function (v, k) { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+    url = u.toString();
+  } catch (e) {}
   if (window.fbq) { try { fbq('track', 'InitiateCheckout'); } catch (e) {} }
   window.location.href = url;
 }
+
+/* Põe o link real do checkout em cada botão de compra, para a Utmify conseguir marcá-lo (sck/xcod) */
+function prepCheckout(el, url) {
+  if (!el || !linkOk(url)) return;
+  try {
+    var u = new URL(url, location.href);
+    new URLSearchParams(location.search).forEach(function (v, k) { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+    el.setAttribute('href', u.toString());
+  } catch (e) { el.setAttribute('href', url); }
+}
+function hrefDe(el, url) { var h = el && el.getAttribute('href'); return (h && h.charAt(0) !== '#' && linkOk(h)) ? h : url; }
 
 function esc(s) {
   return String(s).replace(/[&<>"']/g, function (c) {
@@ -2091,7 +2105,8 @@ function initTracking() {
 document.addEventListener('DOMContentLoaded', function () {
   renderPayments();
   document.querySelectorAll('[data-ult-buy]').forEach(function (b) {
-    b.addEventListener('click', function (e) { e.preventDefault(); goCheckout(CHECKOUT_ULTIMA); });
+    prepCheckout(b, CHECKOUT_ULTIMA);
+    b.addEventListener('click', function (e) { e.preventDefault(); goCheckout(hrefDe(b, CHECKOUT_ULTIMA)); });
   });
   var go = function () { initParticles(); initTracking(); };
   if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2000 }); else setTimeout(go, 200);

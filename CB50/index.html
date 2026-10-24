@@ -2013,11 +2013,25 @@ function utmParams() {
 
 function goCheckout(url) {
   if (!linkOk(url)) { showToast('Link de pagamento ainda não configurado.'); return; }
-  var q = utmParams();
-  if (q) url += (url.indexOf('?') > -1 ? '&' : '?') + q;
+  try {
+    var u = new URL(url, location.href);
+    new URLSearchParams(utmParams()).forEach(function (v, k) { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+    url = u.toString();
+  } catch (e) {}
   if (window.fbq) { try { fbq('track', 'InitiateCheckout'); } catch (e) {} }
   window.location.href = url;
 }
+
+/* Põe o link real do checkout em cada botão de compra, para a Utmify conseguir marcá-lo (sck/xcod) */
+function prepCheckout(el, url) {
+  if (!el || !linkOk(url)) return;
+  try {
+    var u = new URL(url, location.href);
+    new URLSearchParams(location.search).forEach(function (v, k) { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+    el.setAttribute('href', u.toString());
+  } catch (e) { el.setAttribute('href', url); }
+}
+function hrefDe(el, url) { var h = el && el.getAttribute('href'); return (h && h.charAt(0) !== '#' && linkOk(h)) ? h : url; }
 
 function esc(s) {
   return String(s).replace(/[&<>"']/g, function (c) {
@@ -2116,8 +2130,10 @@ function initTracking() {
 
 document.addEventListener('DOMContentLoaded', function () {
   renderPayments();
-  document.getElementById('volta-cta').addEventListener('click', function (e) {
-    e.preventDefault(); goCheckout(CHECKOUT_VOLTA);
+  var cta = document.getElementById('volta-cta');
+  prepCheckout(cta, CHECKOUT_VOLTA);
+  cta.addEventListener('click', function (e) {
+    e.preventDefault(); goCheckout(hrefDe(cta, CHECKOUT_VOLTA));
   });
   var q = window.location.search;
   if (q) document.getElementById('volta-no').href = '../' + q;

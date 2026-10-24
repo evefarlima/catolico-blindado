@@ -2268,7 +2268,7 @@ section { position: relative; z-index: 1; }
       </ul>
       <p class="upsell-price">Plano Premium por <s>14,90 €</s> <strong>12,90 €</strong></p>
       <a href="#" class="cta-button cta-green cta-pulse" id="upsell-yes">Sim, quero tudo por 12,90 €</a>
-      <button type="button" class="upsell-decline" id="upsell-no">Não, obrigado. Quero só o Ebook por 9,90 €</button>
+      <a href="#" class="upsell-decline" id="upsell-no">Não, obrigado. Quero só o Ebook por 9,90 €</a>
     </div>
   </div>
 
@@ -2434,11 +2434,25 @@ function utmParams() {
 
 function goCheckout(url) {
   if (!linkOk(url)) { showToast('Link de pagamento ainda não configurado.'); return; }
-  var q = utmParams();
-  if (q) url += (url.indexOf('?') > -1 ? '&' : '?') + q;
+  try {
+    var u = new URL(url, location.href);
+    new URLSearchParams(utmParams()).forEach(function (v, k) { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+    url = u.toString();
+  } catch (e) {}
   if (window.fbq) { try { fbq('track', 'InitiateCheckout'); } catch (e) {} }
   window.location.href = url;
 }
+
+/* Põe o link real do checkout em cada botão de compra, para a Utmify conseguir marcá-lo (sck/xcod) */
+function prepCheckout(el, url) {
+  if (!el || !linkOk(url)) return;
+  try {
+    var u = new URL(url, location.href);
+    new URLSearchParams(location.search).forEach(function (v, k) { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+    el.setAttribute('href', u.toString());
+  } catch (e) { el.setAttribute('href', url); }
+}
+function hrefDe(el, url) { var h = el && el.getAttribute('href'); return (h && h.charAt(0) !== '#' && linkOk(h)) ? h : url; }
 
 function initials(name) {
   var p = name.trim().split(/\s+/);
@@ -2513,16 +2527,17 @@ function initReviewPops() {
 
 function initPlans() {
   document.querySelectorAll('[data-buy="premium"]').forEach(function (b) {
-    b.addEventListener('click', function (e) { e.preventDefault(); goCheckout(CHECKOUT_PREMIUM); });
+    b.addEventListener('click', function (e) { e.preventDefault(); goCheckout(hrefDe(b, CHECKOUT_PREMIUM)); });
   });
   document.querySelectorAll('[data-buy="basico"]').forEach(function (b) {
     b.addEventListener('click', function (e) { e.preventDefault(); openModal('upsell-modal'); });
   });
-  document.getElementById('upsell-yes').addEventListener('click', function (e) {
-    e.preventDefault(); closeModal('upsell-modal'); goCheckout(CHECKOUT_PREMIUM_DESCONTO);
+  var yes = document.getElementById('upsell-yes'), no = document.getElementById('upsell-no');
+  yes.addEventListener('click', function (e) {
+    e.preventDefault(); closeModal('upsell-modal'); goCheckout(hrefDe(yes, CHECKOUT_PREMIUM_DESCONTO));
   });
-  document.getElementById('upsell-no').addEventListener('click', function (e) {
-    e.preventDefault(); closeModal('upsell-modal'); goCheckout(CHECKOUT_BASICO);
+  no.addEventListener('click', function (e) {
+    e.preventDefault(); closeModal('upsell-modal'); goCheckout(hrefDe(no, CHECKOUT_BASICO));
   });
 }
 
@@ -2571,6 +2586,11 @@ function initTracking() {
     y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script",CLARITY_ID);
   }
 }
+
+/* Links reais nos botões de compra (para a Utmify) */
+document.querySelectorAll('[data-buy="premium"]').forEach(function (b) { prepCheckout(b, CHECKOUT_PREMIUM); });
+prepCheckout(document.getElementById('upsell-yes'), CHECKOUT_PREMIUM_DESCONTO);
+prepCheckout(document.getElementById('upsell-no'), CHECKOUT_BASICO);
 
 document.addEventListener('DOMContentLoaded', function () {
   renderTestimonials();
