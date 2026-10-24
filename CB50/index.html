@@ -2018,7 +2018,6 @@ function goCheckout(url) {
     new URLSearchParams(utmParams()).forEach(function (v, k) { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
     url = u.toString();
   } catch (e) {}
-  if (window.fbq) { try { fbq('track', 'InitiateCheckout'); } catch (e) {} }
   window.location.href = url;
 }
 
