@@ -1956,7 +1956,7 @@ section { position: relative; z-index: 1; }
         Se não gostares, basta enviares-nos um e-mail no prazo de 7 dias e <strong class="text-gold">devolvemos-te o dinheiro</strong>. Sem perguntas.
       </div>
 
-      <a href="../" class="volta-decline" id="volta-no">Não, obrigado. Prefiro perder esta oferta.</a>
+      <a href="../catolicoblindado/" class="volta-decline" id="volta-no">Não, obrigado. Prefiro perder esta oferta.</a>
     </div>
   </section>
 
@@ -2136,7 +2136,7 @@ document.addEventListener('DOMContentLoaded', function () {
     e.preventDefault(); goCheckout(hrefDe(cta, CHECKOUT_VOLTA));
   });
   var q = window.location.search;
-  if (q) document.getElementById('volta-no').href = '../' + q;
+  if (q) document.getElementById('volta-no').href = '../catolicoblindado/' + q;
   var go = function () { initParticles(); initTracking(); };
   if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2000 }); else setTimeout(go, 200);
 });
