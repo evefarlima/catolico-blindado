@@ -1886,6 +1886,10 @@ section { position: relative; z-index: 1; }
 }
 
   </style>
+  <!-- ===================== UTMIFY — PIXEL E UTMs ===================== -->
+  <!-- Cole aqui, por baixo desta linha, os códigos do Pixel e das UTMs da Utmify -->
+
+  <!-- ===================== FIM UTMIFY ===================== -->
 </head>
 <body>
 
@@ -2765,6 +2769,24 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
+
+/* BACK REDIRECT — ao tocar em "voltar", leva à página CB50 (só 1 vez por visita) */
+(function () {
+  var URL_VOLTA = "CB50/";
+  try { if (sessionStorage.getItem('cb_volta')) return; } catch (e) {}
+  var armado = false;
+  function armar() {
+    if (armado) return; armado = true;
+    try { history.pushState({ cbVolta: 1 }, '', location.href); } catch (e) { return; }
+    window.addEventListener('popstate', function () {
+      try { sessionStorage.setItem('cb_volta', '1'); } catch (e) {}
+      location.replace(URL_VOLTA + location.search);
+    });
+  }
+  ['click', 'touchstart', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, armar, { once: true, passive: true });
+  });
+})();
   </script>
 </body>
 </html>
